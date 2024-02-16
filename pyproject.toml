@@ -4,6 +4,26 @@ version = "0.1.0"
 description = "Generate dependency tree visualizations for .NET projects"
 authors = ["J.I. Cruz <israel.jose.pr@gmail.com>"]
 readme = "README.md"
+license = "MIT"
+repository = "https://github.com/jicruz96/dotnet-deptree"
+keywords = [
+    ".NET",
+    "graphviz",
+    "dependencies",
+    "visualization",
+    "dotnet",
+    "deptree",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Environment :: Console",
+    "Programming Language :: C#",
+    "Topic :: Documentation",
+    "Topic :: Software Development :: Build Tools",
+    "Topic :: Software Development :: Documentation",
+]
 
 [tool.poetry.dependencies]
 python = "^3.11"
