@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "dotnet-deptree"
+version = "0.1.0"
+description = "Generate dependency tree visualizations for .NET projects"
+authors = ["J.I. Cruz <israel.jose.pr@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+xmltodict = "^0.13.0"
+graphviz = "^0.20.1"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^7.0.0"
+black = "^24.2.0"
+isort = "^5.13.2"
+
+[tool.poetry.scripts]
+dotnet-deptree = "dotnet_deptree.cli:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
