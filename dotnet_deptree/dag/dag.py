@@ -289,36 +289,3 @@ class DAG:
     @property
     def all_names(self) -> set[str]:
         return set(self.__nodes.keys())
-
-
-def main():
-    print("Creating the DAG...")
-    dag = DAG()
-    A = dag.add("A", data={"label": "A"})
-    B = dag.add("B", data={"label": "B"})
-    C = dag.add("C", data={"label": "C"})
-    A.add_child(B)
-    B.add_child(C)
-    other_dag = DAG()
-    D = other_dag.add("D", data={"label": "D"})
-    other_B = other_dag.add("B", data={"label": "B"})
-    E = other_dag.add("E", data={"label": "E"})
-    F = other_dag.add("F", data={"label": "F"})
-    D.add_child(other_B)
-    other_B.add_child(E)
-    other_B.add_child(F)
-
-    final_dag = dag.merge(other_dag)
-    # # visualize the DAG
-    graph = final_dag.to_graphviz()
-    print("Rendering the graph...")
-    graph.render(
-        "path_based_dependency_tree",
-        format="svg",
-        cleanup=True,
-        view=True,
-    )
-
-
-if __name__ == "__main__":
-    main()
