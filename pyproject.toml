@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "dotnet-deptree"
-version = "0.1.0"
+version = "0.1.2"
 description = "Generate dependency tree visualizations for .NET projects"
 authors = ["J.I. Cruz <israel.jose.pr@gmail.com>"]
 readme = "README.md"

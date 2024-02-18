@@ -1,15 +1,18 @@
 # .NET Dependency Tree Generator
 
+Create dependency tree visualizations for .NET projects. 
+
+## Features
+
+* Generate dependency tree visualizations for one or more .NET projects.
+* Supports rendering to SVG, PNG, PDF, and DOT formats.
+* Visualize your local project dependencies alone, your package dependencies alone, or both together.
+
 ## Install
 
-### Requirements
-
-* Poetry
-* Python >= 3.11
-* [`graphviz`](https://graphviz.org/download/)
-
-1. Clone this repository
-2. Run `poetry install`
+```bash
+pip install dotnet-deptree
+```
 
 ## Usage
 
@@ -39,3 +42,16 @@ options:
                         rendered output filename. prints to stdout by default
   --open                Open the generated files in the default web browser
 ```
+
+## Contributing
+
+Visit the [GitHub repository](https://github.com/jicruz96/dotnet-deptree) for the latest source code.
+
+### Requirements
+
+* Poetry
+* Python >= 3.11
+* [`graphviz`](https://graphviz.org/download/)
+
+1. Clone this repository
+2. Run `poetry install`
