@@ -6,7 +6,7 @@ from typing import Literal, Optional
 
 import graphviz
 
-from dotnet_deptree.dag.path_based_dependency_tree import PathDAGNode
+from dotnet_deptree.dag.path_based_dependency_tree import PathTreeNode
 from dotnet_deptree.dotnet import (
     DotNetPackageDependencyTree,
     DotNetProject,
@@ -119,9 +119,7 @@ class DotNetProjectsDependencyTreeGenerator:
                     is_project = self.is_known_project_name(package_node.name)
                     connected_to_module_node = (
                         package_node.name in tree.all_names
-                        and module_node.is_descendant_of(
-                            tree.get(package_node.name)
-                        )
+                        and module_node.is_descendant_of(tree.get(package_node.name))
                     )
                     if is_project and not connected_to_module_node:
                         new_node = tree.get_or_add(package_node.name)
@@ -153,7 +151,7 @@ class DotNetProjectsDependencyTreeGenerator:
             os.unlink(tf.name)
 
     @staticmethod
-    def generate_node_style(node: PathDAGNode) -> dict[str, str]:
+    def generate_node_style(node: PathTreeNode) -> dict[str, str]:
         attrs = {
             # use larger, bolder text if node is a root
             "fontsize": "8",
@@ -175,4 +173,4 @@ class DotNetProjectsDependencyTreeGenerator:
         return attrs
 
     def is_known_project_name(self, name: str) -> bool:
-        return any(name.startswith(p.name) for p in self.projects)
+        return any(name.startswith(p.project_name) for p in self.projects)

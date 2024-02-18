@@ -1,3 +1,7 @@
+"""Implementation of a "Path-based" tree structure, which is a type of
+Directed Acyclic Graph (DAG).
+"""
+
 import os
 from typing import Any, Self
 
@@ -9,7 +13,11 @@ DEFAULT_NODE_ATTRS = {
 }
 
 
-class PathDAGNode(DAGNode):
+class PathTreeNode(DAGNode):
+    """A node in a PathTree.
+
+    See PathTree for more information.
+    """
 
     sep = os.path.sep
 
@@ -19,18 +27,49 @@ class PathDAGNode(DAGNode):
 
     @property
     def label(self) -> str:
-        x = self.data.get("label", self.basename)
-        if "csproj" in x:
-            breakpoint()
-        return x
+        return self.data.get("label", self.basename)
 
 
-class PathDAG(DAG):
-    node_class = PathDAGNode
+class PathTree(DAG):
+    """Utility to convert a list of file paths into a tree-like structure.
+
+    For example, the following files:
+        - a
+        - a/b
+        - a/b/1
+        - a/b/2
+        - a/c
+
+    Would be represented as:
+    ```
+    PathTree
+    ├── PathTreeNode(a)
+    │   ├── PathTreeNode(a/b)
+    │   │   ├── PathTreeNode(a/b/1)
+    │   │   └── PathTreeNode(a/b/2)
+    │   └── PathTreeNode(a/c)
+    ```
+
+    The tree can be visualized using the `to_graphviz` method, which will
+    return a graphviz.Digraph object.
+
+    Usage:
+    ```python
+    tree = PathTree()
+    tree.add("a/b/1")
+    tree.add("a/b/2")
+    tree.add("a/c")
+    tree.add("a")
+    tree.add("d/e/f")
+    tree.to_graphviz().render("tree")
+    ```
+    """
+
+    node_class = PathTreeNode
     sep = os.path.sep
 
-    def add(self, name: str, data: dict[str, Any]) -> PathDAGNode:
-        node = super().add(name, data=data)
+    def add(self, name: str, data: dict[str, Any] | None = None) -> PathTreeNode:
+        node = super().add(name, data=(data or {}))
         if self.sep in name:
             parent = self.get_or_add(name.rsplit(self.sep, 1)[0])
             parent.add_child(node)

@@ -1,3 +1,10 @@
+"""
+Simple implementation of a directed acyclic graph (DAG) in Python.
+
+This is not necessarily the most efficient implementation, but it is simple
+enough for my purposes.
+"""
+
 from typing import Any, Callable, Self, Sequence
 
 import graphviz
@@ -10,7 +17,7 @@ DEFAULT_NODE_STYLE = {
 
 class DAGNode:
 
-    def __init__(self, name: str, data: dict[str, Any]):
+    def __init__(self, name: str, data: dict[str, Any] | None = None):
         self.validate_data(data)
         self.name = name
         self.data = data or {}
@@ -33,9 +40,7 @@ class DAGNode:
         return [
             parent
             for parent in self.__parents
-            if not any(
-                parent.is_ancestor_of(other) for other in self.__parents
-            )
+            if not any(parent.is_ancestor_of(other) for other in self.__parents)
         ]
 
     @property
@@ -43,18 +48,14 @@ class DAGNode:
         return [
             child
             for child in self.__children
-            if not any(
-                child.is_descendant_of(other) for other in self.__children
-            )
+            if not any(child.is_descendant_of(other) for other in self.__children)
         ]
 
     def add_child(self, child: Self):
         if child is self:
             raise ValueError(f"{child.name} cannot be its own ancestor")
         if child.is_ancestor_of(self):
-            raise ValueError(
-                f"{self.name} is already a descendant of {child!r}"
-            )
+            raise ValueError(f"{self.name} is already a descendant of {child!r}")
         if self.is_parent_of(child):
             raise ValueError(f"{child} is already a child of {self!r}")
         self.__children.append(child)
@@ -99,12 +100,6 @@ class DAGNode:
         return not self.__children
 
     @property
-    def depth(self) -> int:
-        if not self.__parents:
-            return 0
-        return 1 + max(p.depth for p in self.__parents)
-
-    @property
     def roots(self) -> set[Self]:
         if not self.__parents:
             return {self}
@@ -130,7 +125,7 @@ class DAG:
                 raise ValueError("Expected 'name' key in node dictionary")
             self.add(node["name"], data=node)
 
-    def add(self, name: str, data: dict[str, Any]) -> DAGNode:
+    def add(self, name: str, data: dict[str, Any] | None = None) -> DAGNode:
         if name in self.__nodes:
             raise ValueError(f"Node with name {name!r} already exists")
         node = self.node_class(name, data=data)
@@ -145,7 +140,7 @@ class DAG:
         assert isinstance(name, str)
         if name in self.__nodes:
             return self.__nodes[name]
-        return self.add(name, data={})
+        return self.add(name)
 
     def all(self) -> list[DAGNode]:
         return list(set(self.__nodes.values()))

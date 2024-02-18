@@ -9,14 +9,14 @@ from typing import Any, Self
 import xmltodict
 
 from dotnet_deptree.dag.dag import DAG
-from dotnet_deptree.dag.path_based_dependency_tree import PathDAG, PathDAGNode
+from dotnet_deptree.dag.path_based_dependency_tree import PathTree, PathTreeNode
 
 
-class DotNetDependencyNode(PathDAGNode):
+class DotNetDependencyNode(PathTreeNode):
     sep = "."
 
 
-class DotNetPackageDependencyTree(PathDAG):
+class DotNetPackageDependencyTree(PathTree):
     sep = "."
     node_class = DotNetDependencyNode
 
@@ -45,9 +45,7 @@ class DotNetModulePath:
             return path
         if isinstance(path, str):
             return cls(path)
-        TypeError(
-            f"Expected str or {cls.__name__}, got {path} of type {type(path)}."
-        )
+        TypeError(f"Expected str or {cls.__name__}, got {path} of type {type(path)}.")
 
     @staticmethod
     def validate_path(path: str) -> str:
@@ -65,9 +63,7 @@ class DotNetModulePath:
         basename = os.path.basename(path)
         if not os.path.isdir(path):
             if not path.endswith(".csproj"):
-                raise ValueError(
-                    f"{path} is not a .csproj file. {invalid_path_help}"
-                )
+                raise ValueError(f"{path} is not a .csproj file. {invalid_path_help}")
             dirname = os.path.dirname(path)
             parent_dir = dirname.split(os.path.sep)[-1]
             if not basename.startswith(parent_dir):
@@ -78,9 +74,7 @@ class DotNetModulePath:
             return dirname
         csproj = os.path.join(path, f"{basename}.csproj")
         if not os.path.exists(csproj):
-            raise ValueError(
-                f"No .csproj file found at {csproj}. {invalid_path_help}"
-            )
+            raise ValueError(f"No .csproj file found at {csproj}. {invalid_path_help}")
         return path
 
 
@@ -112,7 +106,7 @@ class DotNetProjectModule:
                 "module_name": path.module_name,
                 "is_project": True,
             }
-            tree.add(path.name, node_data)
+            tree.add(path.name, data=node_data)
 
         # add the project itself as a node
         project_node = tree.get_or_add(self.path.name)
@@ -162,11 +156,12 @@ class DotNetProject:
     modules: list[DotNetProjectModule]
 
     @property
-    def name(self) -> str:
+    def project_name(self) -> str:
         return os.path.basename(self.path)
 
     @classmethod
     def from_path(cls, path: str) -> DotNetProject:
+        """Create a DotNetProject, provided a path to a .NET project directory."""
         if not os.path.isdir(path):
             raise ValueError(
                 f"Path {path} is not a directory. Please provide a valid "
@@ -175,10 +170,11 @@ class DotNetProject:
 
         name = os.path.basename(path)
         solution_path = os.path.join(path, f"{name}.sln")
-        if not os.path.exists(solution_path):
+        csproj_path = os.path.join(path, f"{name}.csproj")
+        if not os.path.exists(solution_path) and not os.path.exists(csproj_path):
             raise ValueError(
-                f"No {name}.sln file found at {path}. Please provide a valid "
-                "directory path to a .NET project."
+                f"No {name}.sln file or {name}.csproj file found at {path}. "
+                "Please provide a valid path to a .NET project."
             )
         modules = []
         for child_proj_path in _get_child_project_paths(path):
@@ -187,6 +183,9 @@ class DotNetProject:
 
 
 def _get_child_project_paths(path: str) -> list[str]:
+    """Recursively find all child project paths in a directory, but not
+    any grandchild projects.
+    """
     if not os.path.isdir(path):
         raise ValueError(f"Path {path} is not a directory.")
     csproj = os.path.join(path, f"{os.path.basename(path)}.csproj")

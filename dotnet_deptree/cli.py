@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import argparse
 
+from dotnet_deptree.deptree_generator import DotNetProjectsDependencyTreeGenerator
 from dotnet_deptree.dotnet import DotNetProject
-from dotnet_deptree.generator import DotNetProjectsDependencyTreeGenerator
 
 
 def main():
@@ -17,10 +17,7 @@ def main():
     parser.add_argument(
         "project_paths",
         nargs="+",
-        help=(
-            "Generate dependency tree visualizations for one or more .NET "
-            "projects."
-        ),
+        help="Generate dependency tree visualizations for one or more .NET projects.",
     )
     parser.add_argument(
         "--format",
