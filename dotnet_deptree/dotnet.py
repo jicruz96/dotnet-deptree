@@ -57,9 +57,7 @@ class DotNetModulePath:
         )
 
         if not os.path.exists(path):
-            raise FileNotFoundError(
-                f"No file or directory found at {path}. {invalid_path_help}"
-            )
+            raise FileNotFoundError(f"No file or directory found at {path}. {invalid_path_help}")
         basename = os.path.basename(path)
         if not os.path.isdir(path):
             if not path.endswith(".csproj"):
@@ -68,8 +66,7 @@ class DotNetModulePath:
             parent_dir = dirname.split(os.path.sep)[-1]
             if not basename.startswith(parent_dir):
                 raise ValueError(
-                    f"File {path} does not match the directory name. "
-                    + invalid_path_help
+                    f"File {path} does not match the directory name. " + invalid_path_help
                 )
             return dirname
         csproj = os.path.join(path, f"{basename}.csproj")
@@ -120,8 +117,7 @@ class DotNetProjectModule:
     def package_dependency_tree(self) -> DotNetPackageDependencyTree:
         return DotNetPackageDependencyTree(
             nodes_data=[
-                {"name": ref["@Include"]}
-                for ref in self._get_items_from_csproj("PackageReference")
+                {"name": ref["@Include"]} for ref in self._get_items_from_csproj("PackageReference")
             ],
         )
 
@@ -162,6 +158,7 @@ class DotNetProject:
     @classmethod
     def from_path(cls, path: str) -> DotNetProject:
         """Create a DotNetProject, provided a path to a .NET project directory."""
+        path = os.path.abspath(path)
         if not os.path.isdir(path):
             raise ValueError(
                 f"Path {path} is not a directory. Please provide a valid "
