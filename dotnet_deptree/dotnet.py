@@ -29,13 +29,14 @@ class DotNetCsprojParserError(Exception):
     pass
 
 
-class DotNetModulePath:
+class DotNetProjectPath:
     def __init__(self, path: str):
         self.__path = self.validate_path(path)
 
     path = property(lambda s: s.__path)
     name = property(lambda s: os.path.basename(s.path))
     csproj_path = property(lambda s: os.path.join(s.path, f"{s.name}.csproj"))
+    sln_path = property(lambda s: os.path.join(s.path, f"{s.name}.sln"))
     project_name = property(lambda s: s.name.split(".")[0])
     module_name = property(lambda s: s.name.split(".", maxsplit=1)[-1])
 
@@ -52,8 +53,9 @@ class DotNetModulePath:
 
         invalid_path_help = (
             "Please provide a valid "
-            "path to a .NET .csproj file or to a directory with a .csproj "
-            "file with the same name as the directory."
+            "path to a .sln or .csproj file or to a directory containing one "
+            "of those (note: the directory name must match the name of the "
+            ".csproj/.sln file)."
         )
 
         if not os.path.exists(path):
@@ -66,22 +68,23 @@ class DotNetModulePath:
             parent_dir = dirname.split(os.path.sep)[-1]
             if not basename.startswith(parent_dir):
                 raise ValueError(
-                    f"File {path} does not match the directory name. " + invalid_path_help
+                    f"File {path} does not match the directory name. {invalid_path_help}"
                 )
             return dirname
         csproj = os.path.join(path, f"{basename}.csproj")
-        if not os.path.exists(csproj):
-            raise ValueError(f"No .csproj file found at {csproj}. {invalid_path_help}")
+        sln = os.path.join(path, f"{basename}.sln")
+        if not os.path.exists(csproj) and not os.path.exists(sln):
+            raise ValueError(f"No .csproj or .sln file found at {csproj}. {invalid_path_help}")
         return path
 
 
 class DotNetProjectModule:
 
-    path: DotNetModulePath
+    path: DotNetProjectPath
     csproj: dict[str, Any]
 
-    def __init__(self, path: str | DotNetModulePath) -> None:
-        self.path = DotNetModulePath.eval(path)
+    def __init__(self, path: str | DotNetProjectPath) -> None:
+        self.path = DotNetProjectPath.eval(path)
         try:
             with open(self.path.csproj_path) as f:
                 self.csproj = xmltodict.parse(f.read())
@@ -96,7 +99,7 @@ class DotNetProjectModule:
         for ref in self._get_items_from_csproj("ProjectReference"):
             relative_path = ref["@Include"].replace("\\", os.path.sep)
             project_path_str = os.path.join(self.path.path, relative_path)
-            path = DotNetModulePath.eval(project_path_str)
+            path = DotNetProjectPath.eval(project_path_str)
             node_data = {
                 "name": path.name,
                 "project_name": path.project_name,
@@ -148,35 +151,26 @@ class DotNetProjectModule:
 
 @dataclass
 class DotNetProject:
-    path: str
+    path: DotNetProjectPath
     modules: list[DotNetProjectModule]
 
     @property
     def project_name(self) -> str:
-        return os.path.basename(self.path)
+        return self.path.project_name
 
     @classmethod
-    def from_path(cls, path: str) -> DotNetProject:
+    def from_path(cls, path: str | DotNetProjectPath) -> DotNetProject:
         """Create a DotNetProject, provided a path to a .NET project directory."""
-        path = os.path.abspath(path)
-        if not os.path.isdir(path):
-            raise ValueError(
-                f"Path {path} is not a directory. Please provide a valid "
-                "directory path to a .NET project."
-            )
-
-        name = os.path.basename(path)
-        solution_path = os.path.join(path, f"{name}.sln")
-        csproj_path = os.path.join(path, f"{name}.csproj")
-        if not os.path.exists(solution_path) and not os.path.exists(csproj_path):
-            raise ValueError(
-                f"No {name}.sln file or {name}.csproj file found at {path}. "
-                "Please provide a valid path to a .NET project."
-            )
+        if isinstance(path, DotNetProjectPath):
+            pathobj = path
+        elif isinstance(path, str):
+            pathobj = DotNetProjectPath(os.path.abspath(path))
+        else:
+            raise TypeError(f"Expected str or {DotNetProjectPath.__name__}, got {path}.")
         modules = []
-        for child_proj_path in _get_child_project_paths(path):
+        for child_proj_path in _get_child_project_paths(pathobj.path):
             modules.append(DotNetProjectModule(child_proj_path))
-        return cls(path=path, modules=modules)
+        return cls(path=pathobj, modules=modules)
 
 
 def _get_child_project_paths(path: str) -> list[str]:
